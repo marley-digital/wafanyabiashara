@@ -69,12 +69,90 @@ ul{ padding:0; margin:0 0 1.1em; }
 
 /* ===== Landing ===== */
 .view-landing{ background:var(--paper); }
-.hero{ padding-top:12px; }
-.hero h1{
+
+.eyebrow{
+  font-size:0.78rem;
+  font-weight:700;
+  letter-spacing:0.08em;
+  margin:0 0 4px;
+}
+
+.hero{
+  background:linear-gradient(160deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color:#fff;
+  border-radius:24px;
+  padding:28px 22px 32px;
+  margin:-8px 0 8px;
+  box-shadow:var(--shadow);
+}
+.hero-inner{ display:flex; flex-direction:column; gap:18px; }
+.hero-eyebrow{ color:var(--accent); }
+.hero-headline{
+  color:#fff;
   font-size:1.7rem;
   font-weight:800;
   letter-spacing:-0.01em;
+  margin:0;
 }
+.hero-headline .hl-red{ color:#ff8b82; }
+.hero-headline .hl-gold{ color:var(--accent); }
+
+.hero-media-frame{
+  position:relative;
+  border-radius:18px;
+  overflow:hidden;
+  border:2px solid rgba(196,61,54,0.55);
+  box-shadow:0 0 0 6px rgba(196,61,54,0.12), 0 16px 36px rgba(0,0,0,0.35);
+  aspect-ratio:4/3;
+  background:var(--navy-deep);
+}
+.hero-media-frame img{ width:100%; height:100%; object-fit:cover; }
+.hero-media-placeholder{
+  display:none;
+  height:100%; width:100%;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  color:rgba(255,255,255,0.65);
+  text-align:center;
+  padding:20px;
+}
+.hero-media-placeholder p{ margin:0; font-size:0.82rem; }
+
+.hero-lede-group p{ color:rgba(255,255,255,0.88); margin:0 0 12px; }
+.hero-urgency{ color:var(--accent); font-weight:700; margin:0; }
+
+.trust-line{
+  font-size:0.85rem;
+  color:rgba(255,255,255,0.6);
+  margin:0;
+}
+
+@media (min-width:900px){
+  .hero{ padding:36px 40px; }
+  .hero-inner{
+    display:grid;
+    grid-template-columns:55fr 45fr;
+    grid-template-areas:
+      "eyebrow eyebrow"
+      "headline media"
+      "lede media"
+      "cta media"
+      "trust media";
+    align-items:start;
+    row-gap:18px;
+    column-gap:48px;
+  }
+  .hero-eyebrow{ grid-area:eyebrow; }
+  .hero-headline{ grid-area:headline; font-size:2.2rem; }
+  .hero-media{ grid-area:media; align-self:stretch; }
+  .hero-media-frame{ height:100%; aspect-ratio:auto; }
+  .hero-lede-group{ grid-area:lede; max-width:520px; }
+  .cta-group{ grid-area:cta; max-width:480px; }
+  .trust-line{ grid-area:trust; max-width:520px; }
+}
+
 .sales-section{
   border-top:1px solid var(--line);
   padding-top:36px;
