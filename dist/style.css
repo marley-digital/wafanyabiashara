@@ -123,12 +123,6 @@ ul{ padding:0; margin:0 0 1.1em; }
 .hero-lede-group p{ color:rgba(255,255,255,0.88); margin:0 0 12px; }
 .hero-urgency{ color:var(--accent); font-weight:700; margin:0; }
 
-.trust-line{
-  font-size:0.85rem;
-  color:rgba(255,255,255,0.6);
-  margin:0;
-}
-
 @media (min-width:900px){
   .hero{ padding:36px 40px; }
   .hero-inner{
@@ -138,8 +132,7 @@ ul{ padding:0; margin:0 0 1.1em; }
       "eyebrow eyebrow"
       "headline media"
       "lede media"
-      "cta media"
-      "trust media";
+      "cta media";
     align-items:start;
     row-gap:18px;
     column-gap:48px;
@@ -150,7 +143,6 @@ ul{ padding:0; margin:0 0 1.1em; }
   .hero-media-frame{ height:100%; aspect-ratio:auto; }
   .hero-lede-group{ grid-area:lede; max-width:520px; }
   .cta-group{ grid-area:cta; max-width:480px; }
-  .trust-line{ grid-area:trust; max-width:520px; }
 }
 
 .sales-section{
