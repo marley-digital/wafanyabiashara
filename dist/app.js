@@ -2,12 +2,20 @@
   'use strict';
 
   /* =========================================================
-     CONFIG — replace this number before deploying.
+     CONFIG
      ========================================================= */
-  var WHATSAPP_NUMBER = '255XXXXXXXXX';
+  var WHATSAPP_NUMBER = '255754546567';
+  var MPESA_NUMBER = '0750 278 741';
+  var MPESA_NAME = 'HASSAN MARLEY';
+  var PRICE_DISCOUNT = 'TZS 10,000';
+  var PRICE_ORIGINAL = 'TZS 30,000';
+  var OFFER_DURATION_MS = 10 * 60 * 1000;
+  var OFFER_STORAGE_KEY = 'tathmini_offer_start_ts';
+  var RESULTS_PROCESSING_MS = 3000;
 
   var PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var STORAGE_KEY = 'tathmini_state_v1';
+  var offerTimerInterval = null;
 
   /* =========================================================
      QUIZ DATA
@@ -74,8 +82,6 @@
         { label: 'Ina wafanyakazi', tag: 'employees' },
         { label: 'Ina mshirika au wamiliki zaidi ya mmoja', tag: 'partners' },
         { label: 'Ina mali au vifaa vya thamani', tag: 'assets' },
-        { label: 'Inataka kuomba zabuni au mikataba mikubwa', tag: 'tenders' },
-        { label: 'Inatafuta mkopo au uwekezaji', tag: 'loan' },
         { label: 'Ina madeni au hatari zinazoweza kuathiri mali zangu binafsi', tag: 'liability' },
         { label: 'Hakuna kati ya hizo', tag: 'none' }
       ]
@@ -132,16 +138,6 @@
       unsure_calc: 'Unalipa kodi lakini hufahamu vizuri jinsi inavyokokotolewa — hii inaweza kukufanya ushindwe kupanga bajeti sahihi.',
       compliant: 'Unafahamu na kutimiza majukumu yako ya kikodi — msingi mzuri, lakini bado kuna nafasi ya kuboresha upangaji wa kodi kwa ufanisi zaidi.'
     }
-  };
-
-  var Q8_LINES = {
-    estimates: 'Kwa kuwa wasiwasi wako mkubwa ni kupokea makadirio makubwa ya kodi, hatua ya kwanza ni kuweka kumbukumbu sahihi za gharama zako ili uwe na uwezo wa kuthibitisha faida yako halisi.',
-    mixing: 'Kwa kuwa unahofia kuchanganya mali binafsi na za biashara, kutenganisha fedha zako mapema ndiyo hatua muhimu zaidi utakayochukua sasa.',
-    records: 'Kwa kuwa unahofia kukosa kumbukumbu za kuthibitisha gharama, kuweka mfumo wa nyaraka sahihi ndiyo eneo la kuanzia kwako.',
-    contracts: 'Kwa kuwa unataka kuwa tayari kwa mikataba na zabuni kubwa, muundo sahihi wa biashara na nyaraka kamili ndiyo msingi utakaokufungulia fursa hizo.',
-    registration: 'Kwa kuwa hujui kama unapaswa kusajili kampuni, tutakusaidia kuelewa muundo unaofaa zaidi kwa hatua uliyopo ya biashara yako.',
-    unsure_start: 'Kwa kuwa hujui hatua ya kuanzia, tutakuongoza hatua kwa hatua kulingana na hali halisi ya biashara yako.',
-    reassurance: 'Kwa kuwa unataka tu uhakika kuwa umejiandaa vizuri, tathmini hii ni mwanzo mzuri — tutakupitia maeneo yanayohitaji kuimarishwa.'
   };
 
   /* =========================================================
@@ -214,7 +210,20 @@
 
   function onViewShown(name) {
     if (name === 'quiz') renderQuestion();
-    if (name === 'results') renderResults();
+    if (name === 'results') beginResultsProcessing();
+  }
+
+  function beginResultsProcessing() {
+    var processingEl = document.getElementById('processing-block');
+    var contentEl = document.getElementById('result-content');
+    if (processingEl) processingEl.hidden = false;
+    if (contentEl) contentEl.hidden = true;
+
+    window.setTimeout(function () {
+      if (processingEl) processingEl.hidden = true;
+      if (contentEl) contentEl.hidden = false;
+      renderResults();
+    }, RESULTS_PROCESSING_MS);
   }
 
   /* =========================================================
@@ -323,7 +332,7 @@
 
       card.addEventListener('click', function () {
         if (q.type === 'multi') {
-          handleMultiSelect(q, optIdx, card);
+          handleMultiSelect(q, optIdx, card, block);
         } else {
           handleSingleSelect(q, optIdx, card, block);
         }
@@ -360,18 +369,29 @@
     }, 250);
   }
 
-  function handleMultiSelect(q, optIdx, card) {
+  function handleMultiSelect(q, optIdx, card, block) {
     var current = Array.isArray(state.answers[q.id]) ? state.answers[q.id].slice() : [];
-    var pos = current.indexOf(optIdx);
-    if (pos === -1) {
-      current.push(optIdx);
-      card.classList.add('is-selected');
+    var opt = q.options[optIdx];
+    var noneIdx = q.options.findIndex(function (o) { return o.tag === 'none'; });
+
+    if (opt.tag === 'none') {
+      // Selecting "Hakuna kati ya hizo" clears every other selection.
+      current = current.indexOf(optIdx) === -1 ? [optIdx] : [];
     } else {
-      current.splice(pos, 1);
-      card.classList.remove('is-selected');
+      if (noneIdx !== -1) {
+        var nonePos = current.indexOf(noneIdx);
+        if (nonePos !== -1) current.splice(nonePos, 1);
+      }
+      var pos = current.indexOf(optIdx);
+      if (pos === -1) current.push(optIdx); else current.splice(pos, 1);
     }
+
     state.answers[q.id] = current;
     saveState();
+
+    block.querySelectorAll('.option-card').forEach(function (c, idx) {
+      c.classList.toggle('is-selected', current.indexOf(idx) !== -1);
+    });
   }
 
   function goToNextQuestion() {
@@ -575,21 +595,13 @@
       list.appendChild(li);
     });
 
-    var q8Tag = getTag('q8', false);
-    var personalLine = document.getElementById('personal-line');
-    personalLine.textContent = (q8Tag && Q8_LINES[q8Tag]) ? Q8_LINES[q8Tag] : '';
+    renderOfferSection(scoring);
 
     var gaugeNumber = document.getElementById('gauge-number');
     var gaugeArc = document.getElementById('gauge-arc');
     gaugeNumber.textContent = '0';
     gaugeArc.style.transition = 'none';
     gaugeArc.style.strokeDashoffset = '251.2';
-
-    var whatsappCta = document.getElementById('whatsapp-cta');
-    var message = 'Habari, naitwa ' + state.lead.jina + '. Nimefanya tathmini ya biashara yangu (' +
-      state.lead.biashara + ') na nimepata matokeo: ' + scoring.tier.title +
-      '. Nataka msaada wa kuandaa biashara yangu.';
-    whatsappCta.href = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
 
     window.requestAnimationFrame(function () {
       window.requestAnimationFrame(function () {
@@ -612,6 +624,129 @@
         window.requestAnimationFrame(step);
       });
     });
+  }
+
+  /* =========================================================
+     OFFER — countdown-priced upsell shown after the free findings.
+     Timer start is persisted to sessionStorage so a refresh does not
+     reset it; once it reaches 0 the price change is real and stays.
+     ========================================================= */
+  function getOfferStartTs() {
+    try {
+      var stored = sessionStorage.getItem(OFFER_STORAGE_KEY);
+      if (stored) return parseInt(stored, 10);
+      var now = Date.now();
+      sessionStorage.setItem(OFFER_STORAGE_KEY, String(now));
+      return now;
+    } catch (e) {
+      return Date.now();
+    }
+  }
+
+  function formatMMSS(ms) {
+    var totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function buildOfferWhatsappHref(scoring, price) {
+    var message = 'Habari, naitwa ' + state.lead.jina + '. Nimemaliza tathmini (' +
+      scoring.tier.title + ') na nimelipa ' + price + ' kwa ajili ya Mwongozo. Screenshot hii hapa 👇';
+    return 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
+  }
+
+  function renderOfferExpired(container, scoring) {
+    container.innerHTML =
+      '<div class="offer-card offer-card-expired">' +
+        '<p class="offer-expired-title">Ofa ya ' + PRICE_DISCOUNT + ' imeisha.</p>' +
+        '<p>Mwongozo bado unapatikana kwa bei yake ya kawaida:</p>' +
+        '<p class="offer-price-row"><span class="price-current">' + PRICE_ORIGINAL + '</span></p>' +
+        '<div class="mpesa-box">' +
+          '<ol class="mpesa-steps">' +
+            '<li>Lipa kwa M-Pesa: <span class="mpesa-number">' + MPESA_NUMBER + '</span> — <span class="mpesa-name">' + MPESA_NAME + '</span></li>' +
+            '<li>Tuma screenshot WhatsApp</li>' +
+            '<li>Pokea mwongozo wako papo hapo</li>' +
+          '</ol>' +
+        '</div>' +
+        '<a class="btn btn-whatsapp btn-full" href="' + buildOfferWhatsappHref(scoring, PRICE_ORIGINAL) + '" target="_blank" rel="noopener">NIMELIPA — TUMA SCREENSHOT WHATSAPP</a>' +
+      '</div>';
+  }
+
+  function renderOfferActive(container, scoring) {
+    container.innerHTML =
+      '<div class="offer-transition">' +
+        '<p>Matokeo yako yamekuonyesha <strong>TATIZO</strong>. Sasa unahitaji <strong>RAMANI</strong>.</p>' +
+        '<p>Kila jambo lililoonekana kwenye tathmini yako lina hatua yake ya kulitatua — na hatua zote tumeziweka mahali pamoja.</p>' +
+      '</div>' +
+      '<div class="offer-card">' +
+        '<p class="offer-title">📘 MWONGOZO WA KUANDAA BIASHARA YAKO KIKODI</p>' +
+        '<p class="offer-subtitle">Hatua kwa Hatua — Kabla TRA Haijakufikia</p>' +
+        '<p class="offer-includes-label">Ndani yake utapata:</p>' +
+        '<ul class="offer-includes">' +
+          '<li>Njia yako maalum kulingana na matokeo yako ya leo — unaanzia wapi, hatua kwa hatua</li>' +
+          '<li>Jinsi ya kusajili biashara BRELA mtandaoni bila kwenda ofisini — na makosa ya kuepuka</li>' +
+          '<li>Siri ya kisheria: jinsi wenye kumbukumbu wanavyolipa kodi ndogo kuliko wasio nazo</li>' +
+          '<li>Mfumo wa dakika 30 kwa wiki wa kumbukumbu — bila mhasibu</li>' +
+          '<li>Jinsi ya kupata msamaha wa kodi wa miezi 12 kwa biashara mpya (sheria ya 2026)</li>' +
+          '<li>Templates 3 za bure: daftari la mauzo na gharama, orodha ya risiti, checklist ya nyaraka za zabuni na mikopo</li>' +
+        '</ul>' +
+        '<div class="offer-price-block">' +
+          '<p class="offer-price-eyebrow">OFA YA LEO — KWA WALIOMALIZA TATHMINI TU:</p>' +
+          '<p class="offer-price-row"><span class="price-old">' + PRICE_ORIGINAL + '</span> → <span class="price-current">' + PRICE_DISCOUNT + '</span></p>' +
+          '<p class="offer-timer">⏳ Ofa hii inaisha ndani ya: <span class="countdown" id="offer-countdown"></span></p>' +
+          '<p class="offer-timer-note">Muda ukiisha, bei inarudi ' + PRICE_ORIGINAL + ' — moja kwa moja.</p>' +
+        '</div>' +
+        '<div class="mpesa-box">' +
+          '<p class="mpesa-steps-label">JINSI YA KUPATA MWONGOZO WAKO SASA (dakika 2):</p>' +
+          '<ol class="mpesa-steps">' +
+            '<li>Lipa ' + PRICE_DISCOUNT + ' kwa M-Pesa:<br><span class="mpesa-number">📲 ' + MPESA_NUMBER + '</span><br><span class="mpesa-name">' + MPESA_NAME + '</span></li>' +
+            '<li>Tuma screenshot ya malipo WhatsApp</li>' +
+            '<li>Pokea mwongozo wako PDF papo hapo + templates zako</li>' +
+          '</ol>' +
+        '</div>' +
+        '<a class="btn btn-whatsapp btn-full" href="' + buildOfferWhatsappHref(scoring, PRICE_DISCOUNT) + '" target="_blank" rel="noopener">✅ NIMELIPA — TUMA SCREENSHOT WHATSAPP</a>' +
+        '<p class="offer-trust">Umefanya tathmini bure. Mwongozo huu unakupa majibu — kwa bei ya chini ya soda tano. Ukikwama popote ndani ya mwongozo, unaweza kuniuliza WhatsApp.</p>' +
+      '</div>';
+  }
+
+  function updateOfferCountdown(msLeft) {
+    var el = document.getElementById('offer-countdown');
+    if (!el) return;
+    el.textContent = formatMMSS(msLeft);
+    el.classList.toggle('is-urgent', msLeft <= 120000);
+  }
+
+  function renderOfferSection(scoring) {
+    var container = document.getElementById('offer-section');
+    if (!container) return;
+
+    if (offerTimerInterval) {
+      clearInterval(offerTimerInterval);
+      offerTimerInterval = null;
+    }
+
+    var startTs = getOfferStartTs();
+    var remaining = OFFER_DURATION_MS - (Date.now() - startTs);
+
+    if (remaining <= 0) {
+      renderOfferExpired(container, scoring);
+      return;
+    }
+
+    renderOfferActive(container, scoring);
+    updateOfferCountdown(remaining);
+
+    offerTimerInterval = setInterval(function () {
+      var msLeft = OFFER_DURATION_MS - (Date.now() - startTs);
+      if (msLeft <= 0) {
+        clearInterval(offerTimerInterval);
+        offerTimerInterval = null;
+        renderOfferExpired(container, scoring);
+        return;
+      }
+      updateOfferCountdown(msLeft);
+    }, 1000);
   }
 
   /* =========================================================

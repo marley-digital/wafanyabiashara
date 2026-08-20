@@ -174,32 +174,38 @@
   <!-- ================= RESULTS VIEW ================= -->
   <section class="view view-results" data-view="results" id="view-results">
     <div class="wrap wrap-narrow">
-      <div class="result-badge" id="result-badge">
-        <span class="result-emoji" id="result-emoji"></span>
-        <span class="result-title" id="result-title"></span>
+
+      <div class="processing-block" id="processing-block" hidden>
+        <div class="processing-spinner" aria-hidden="true"></div>
+        <p class="processing-line" style="animation-delay:0s">Tunachambua majibu yako&hellip;</p>
+        <p class="processing-line" style="animation-delay:1s">Tunapima kiwango cha hatari&hellip;</p>
+        <p class="processing-line" style="animation-delay:2s">Tunaandaa matokeo yako&hellip;</p>
       </div>
 
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 200 120" class="gauge-svg" aria-hidden="true">
-          <path d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="var(--gauge-track)" stroke-width="16" stroke-linecap="round"/>
-          <path id="gauge-arc" d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="var(--accent)" stroke-width="16" stroke-linecap="round"/>
-        </svg>
-        <div class="gauge-score">
-          <span id="gauge-number">0</span><span class="gauge-max">/8</span>
+      <div class="result-content" id="result-content">
+        <div class="result-badge" id="result-badge">
+          <span class="result-emoji" id="result-emoji"></span>
+          <span class="result-title" id="result-title"></span>
         </div>
+
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 200 120" class="gauge-svg" aria-hidden="true">
+            <path d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="var(--gauge-track)" stroke-width="16" stroke-linecap="round"/>
+            <path id="gauge-arc" d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="var(--accent)" stroke-width="16" stroke-linecap="round"/>
+          </svg>
+          <div class="gauge-score">
+            <span id="gauge-number">0</span><span class="gauge-max">/8</span>
+          </div>
+        </div>
+
+        <p class="risk-note" id="risk-note"></p>
+
+        <h3 class="results-subhead">Matokeo ya Tathmini Yako</h3>
+        <ul class="findings-list" id="findings-list"></ul>
+
+        <div id="offer-section"></div>
       </div>
 
-      <p class="risk-note" id="risk-note"></p>
-
-      <h3 class="results-subhead">Matokeo ya Tathmini Yako</h3>
-      <ul class="findings-list" id="findings-list"></ul>
-
-      <p class="personal-line" id="personal-line"></p>
-
-      <a class="btn btn-whatsapp btn-full" id="whatsapp-cta" href="#" target="_blank" rel="noopener">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 6.32A8.86 8.86 0 0 0 12.02 3.5c-4.88 0-8.85 3.97-8.85 8.85 0 1.56.41 3.08 1.19 4.42L3.5 20.5l3.85-1c1.29.7 2.75 1.08 4.24 1.08h.01c4.88 0 8.85-3.97 8.85-8.85 0-2.36-.92-4.58-2.85-6.41zM12.6 19c-1.32 0-2.62-.35-3.75-1.02l-.27-.16-2.79.73.74-2.72-.18-.28a7.36 7.36 0 0 1-1.13-3.9c0-4.06 3.3-7.36 7.38-7.36 1.97 0 3.82.77 5.21 2.16a7.32 7.32 0 0 1 2.16 5.21c0 4.06-3.3 7.34-7.37 7.34zm4.04-5.5c-.22-.11-1.3-.64-1.5-.72-.2-.07-.35-.11-.5.11-.15.22-.57.72-.7.87-.13.15-.26.16-.48.06-.22-.11-.94-.35-1.79-1.11-.66-.59-1.11-1.31-1.24-1.53-.13-.22-.01-.34.1-.45.1-.1.22-.26.33-.4.11-.13.15-.22.22-.37.07-.15.04-.28-.02-.4-.06-.11-.5-1.21-.69-1.66-.18-.43-.37-.38-.5-.38-.13 0-.28-.02-.43-.02-.15 0-.4.06-.6.28-.2.22-.8.78-.8 1.9 0 1.12.82 2.2.93 2.35.11.15 1.61 2.46 3.9 3.45.55.24.97.38 1.31.48.55.17 1.05.15 1.44.09.44-.07 1.3-.53 1.48-1.04.18-.51.18-.94.13-1.04-.05-.09-.2-.15-.42-.26z"/></svg>
-        <span>ZUNGUMZA NAMI WHATSAPP SASA</span>
-      </a>
     </div>
   </section>
 
